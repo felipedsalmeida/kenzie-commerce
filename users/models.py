@@ -17,3 +17,4 @@ class User(AbstractUser):
         default=USER_TYPE.SELLER
     )
     address = models.OneToOneField("addresses.Address", on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
