@@ -10,15 +10,23 @@ class OrderSerializer(serializers.ModelSerializer):
     order_products = serializers.SerializerMethodField()
     
     def create(self, validated_data):
-        order = Order.objects.create(**validated_data)
         products = [(cp.product, cp.amount) for cp in Cart_Products.objects.filter(cart_id = validated_data.get("buyer").id)]
-        #print(products[0][0].seller)
+        
+        seller_dict = {}
+        order = None
+        for product, amount in products:            
+            try:
+                #if product.username in seller_dict:
+                seller_dict[product.seller.username] += [product]
+                    
+            except:
+                seller_dict[product.seller.username] = [product]
+                order = Order.objects.create(**validated_data)
 
-        for product, amount in products:
             Order_Products.objects.create(order = order, product = product, amount = amount)
             product.stock -= amount
             product.save()
-
+        
         return order
 
     def get_order_products(self, order):
@@ -26,11 +34,11 @@ class OrderSerializer(serializers.ModelSerializer):
         order_list = []
         for op in order_products:
             #print(op.product.seller)
-            order_list.append({"product_id": op.product.id, 
+            order_list.append({"product_id": op.product.id,
                                "name":op.product.name, 
                                "category": op.product.category, 
                                "price": op.product.price, 
-                               #"seller": op.product.seller, 
+                               "seller": f"{op.product.seller.first_name} {op.product.seller.last_name}", 
                                "amount": op.amount})
         return order_list
     class Meta:

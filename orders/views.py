@@ -22,7 +22,8 @@ class ListCreateOrder(ListCreateAPIView):
         if user.type == USER_TYPE.ADMIN:  
             return queryset
 
-        if user.type == USER_TYPE.SELLER: 
+        if user.type == USER_TYPE.SELLER:
+            #return queryset.filter(seller = user)
             return queryset #Descobrir uma foram de acessar o seller atraves do product
 
         if user.type == USER_TYPE.CUSTOMER: 
