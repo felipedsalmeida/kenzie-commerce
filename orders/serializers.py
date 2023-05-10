@@ -8,12 +8,14 @@ from users.serializers import UserSerializer
 class OrderSerializer(serializers.ModelSerializer):
     buyer = UserSerializer(read_only=True)
     order_products = serializers.SerializerMethodField()
-    
+    # seller = serializers.SerializerMethodField(read_only=True)
+
     def create(self, validated_data):
         products = [(cp.product, cp.amount) for cp in Cart_Products.objects.filter(cart_id = validated_data.get("buyer").id)]
         
         seller_dict = {}
         order = None
+        
         for product, amount in products:            
             try:
                 #if product.username in seller_dict:
@@ -26,6 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
             Order_Products.objects.create(order = order, product = product, amount = amount)
             product.stock -= amount
             product.save()
+        
         
         return order
 
@@ -41,6 +44,11 @@ class OrderSerializer(serializers.ModelSerializer):
                                "seller": f"{op.product.seller.first_name} {op.product.seller.last_name}", 
                                "amount": op.amount})
         return order_list
+
+    # def get_seller(self, order):
+    #     seller = Order_Products.objects.filter(seller = order.product.seller)
+    #     return order.status
+
     class Meta:
         model = Order
         fields = ["id", "buyer", "status", "created_at", "order_products"]

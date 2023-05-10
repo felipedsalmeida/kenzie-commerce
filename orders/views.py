@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
-from orders.models import Order
+from orders.models import Order, Order_Products
 from orders.serializers import OrderSerializer
 from users.models import USER_TYPE
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -18,13 +18,13 @@ class ListCreateOrder(ListCreateAPIView):
     def get_queryset(self):
         queryset = Order.objects.all()
         user = self.request.user
-
+        print(queryset[0].products)
         if user.type == USER_TYPE.ADMIN:  
             return queryset
 
         if user.type == USER_TYPE.SELLER:
-            #return queryset.filter(seller = user)
-            return queryset #Descobrir uma foram de acessar o seller atraves do product
+            return queryset.filter(buyer = 99)
+            #return queryset #Descobrir uma foram de acessar o seller atraves do product
 
         if user.type == USER_TYPE.CUSTOMER: 
             return queryset.filter(buyer=user)        
@@ -42,16 +42,19 @@ class RetrieveUpdateDestroyOrder(RetrieveUpdateDestroyAPIView):
 class ListDeveliredOrder (ListAPIView):
     authentication_classes = [JWTAuthentication]
 
+    serializer_class = OrderSerializer
+    
     def get_queryset(self):
-        queryset = Order.objects.all().filter(status="Delivered")
+        queryset = Order.objects.filter(status="Delivered")
         user = self.request.user
 
         if user.type == USER_TYPE.ADMIN:  
             return queryset
 
         if user.type == USER_TYPE.SELLER:
-            #return queryset.filter(seller = user)
-            return queryset #Descobrir uma foram de acessar o seller atraves do product
+            return queryset.filter(products__seller__type = user.type)
+            # return queryset.filter(status="Delivered", order_product = user)
+            # return queryset #Descobrir uma foram de acessar o seller atraves do product
 
         if user.type == USER_TYPE.CUSTOMER: 
             return queryset.filter(buyer=user) 
