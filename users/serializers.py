@@ -28,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         address = instance.address
 
         user = self.context["request"].user
+        value = validated_data.get("type")
 
         if value == USER_TYPE.ADMIN and not (user and user.is_superuser):
             raise serializers.ValidationError("Only Admins can set the type to Admin.")
