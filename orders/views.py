@@ -53,8 +53,24 @@ class ListDeveliredOrder (ListAPIView):
 
         if user.type == USER_TYPE.SELLER:
             return queryset.filter(products__seller__type = user.type)
-            # return queryset.filter(status="Delivered", order_product = user)
-            # return queryset #Descobrir uma foram de acessar o seller atraves do product
 
         if user.type == USER_TYPE.CUSTOMER: 
-            return queryset.filter(buyer=user) 
+            return queryset.filter(buyer=user)
+
+class ListPlacedOrder(ListAPIView):
+    authentication_classes = [JWTAuthentication]
+
+    serializer_class = OrderSerializer
+    
+    def get_queryset(self):
+        queryset = Order.objects.filter(status="Order Placed")
+        user = self.request.user
+
+        if user.type == USER_TYPE.ADMIN:  
+            return queryset
+
+        if user.type == USER_TYPE.SELLER:
+            return queryset.filter(products__seller__type = user.type)
+
+        if user.type == USER_TYPE.CUSTOMER: 
+            return queryset.filter(buyer=user)
