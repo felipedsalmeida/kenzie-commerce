@@ -10,13 +10,6 @@ from .models import USER_TYPE, User
 class UserSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
 
-    def validate_type(self, value: str) -> str:
-        user = self.context["request"].user
-
-        if value == USER_TYPE.ADMIN and not (user and user.is_superuser):
-            raise serializers.ValidationError("Only Admins can set the type to Admin.")
-        return value
-
     def create(self, validated_data: dict) -> User:
         address_data = validated_data.pop("address")
         address = Address.objects.create(**address_data)
@@ -33,6 +26,11 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance: User, validated_data: dict) -> User:
         address_data = validated_data.pop("address")
         address = instance.address
+
+        user = self.context["request"].user
+
+        if value == USER_TYPE.ADMIN and not (user and user.is_superuser):
+            raise serializers.ValidationError("Only Admins can set the type to Admin.")
 
         for key, value in address_data.items():
             setattr(address, key, value)
