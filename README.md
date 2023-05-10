@@ -40,8 +40,6 @@ pip install -r requirements.txt
 
 5. Crie um arquivo .env com as mesmas variáveis do arquivo .env.example para realizar as configurações do banco de dados.
 
-<br>
-
 ### **ATENÇÃO:**
 
 Os nomes das variáveis precisam ser iguais aos exemplos do arquivo .env.example.
