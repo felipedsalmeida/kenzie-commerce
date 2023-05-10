@@ -14,4 +14,4 @@ class Cart(models.Model):
 class Cart_Products(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.PROTECT)
     product = models.ForeignKey("products.Product", on_delete=models.PROTECT)
-    amount = models.IntegerField(validators=[MinValueValidator(0)])
+    amount = models.IntegerField(validators=[MinValueValidator(1)])

@@ -3,7 +3,6 @@ from rest_framework.validators import UniqueValidator
 from addresses.models import Address
 from addresses.serializers import AddressSerializer
 from carts.models import Cart
-from carts.serializers import CartSerializer
 
 from .models import USER_TYPE, User
 
@@ -12,9 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
 
     def create(self, validated_data: dict) -> User:
-        address_data = validated_data.pop('address')
+        address_data = validated_data.pop("address")
         address = Address.objects.create(**address_data)
-        user_type = validated_data.get('type')
+        user_type = validated_data.get("type")
 
         if user_type == USER_TYPE.ADMIN:
             user = User.objects.create_superuser(address=address, **validated_data)
@@ -25,21 +24,42 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance: User, validated_data: dict) -> User:
-        address_data = validated_data.pop('address')
+        address_data = validated_data.pop("address")
         address = instance.address
+
+        user = self.context["request"].user
+        value = validated_data.get("type")
+
+        if value == USER_TYPE.ADMIN and not (user and user.is_superuser):
+            raise serializers.ValidationError("Only Admins can set the type to Admin.")
 
         for key, value in address_data.items():
             setattr(address, key, value)
         address.save()
 
-        for key, value in validated_data.items():
-            if key == "password":
-                instance.set_password(value)
-            else:
-                setattr(instance, key, value)
+        user = self.context["request"].user
+        if user and user.is_superuser:
+            for key, value in validated_data.items():
+                if key == "password":
+                    instance.set_password(value)
+                elif key == "type":
+                    if value == USER_TYPE.ADMIN:
+                        instance.is_superuser = True
+                        instance.is_staff = True
+                    elif value in [USER_TYPE.CUSTOMER, USER_TYPE.SELLER]:
+                        instance.is_superuser = False
+                        instance.is_staff = False
+                    setattr(instance, key, value)
+                else:
+                    setattr(instance, key, value)
+        else:
+            for key, value in validated_data.items():
+                if key == "password":
+                    instance.set_password(value)
+                else:
+                    setattr(instance, key, value)
 
         instance.save()
-
         return instance
 
     class Meta:
